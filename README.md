@@ -29,7 +29,37 @@ A Django-based logging and analytics system built with Cookiecutter Django, Dock
 
 ### 1. Clone the repository
 
-Mind You error log analyzer
+```bash
+git clone https://github.com/yourusername/mindyou_logs.git
+cd mindyou_logs
+
+
+### 2. Setup environment variables
+cp .env.example .env
+
+### 3. Build and start containers
+Open Docker Container Desktop
+docker compose -f docker-compose.local.yml up --build  
+
+### Access the app
+App: http://localhost:8000
+Admin: http://localhost:8000/admin
+
+### 4. Run migrations
+docker compose -f docker-compose.local.yml exec django python manage.py migrate
+
+### 5. Create a superuser
+docker compose -f docker-compose.local.yml exec django python manage.py createsuperuser
+
+🔄 Running Services
+Django App
+PostgreSQL
+Redis
+Celery Worker
+Celery Beat
+
+### Check services status
+docker compose -f docker-compose.local.yml ps
 
 [![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
