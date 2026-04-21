@@ -6,6 +6,7 @@ __pycache__/
 *.pyo
 *.pyd
 *.sqlite3
+*.pyc
 
 # C extensions
 *.so
@@ -72,7 +73,6 @@ celerybeat-schedule
 venv/
 ENV/
 !.env.example
-.
 
 # Rope project settings
 .ropeproject
@@ -86,7 +86,7 @@ ENV/
 
 ### Node template
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -282,14 +282,16 @@ mindyou_logs/media/
 .pytest_cache/
 .ipython/
 .env
+.envs/
 .envs/*
 .env.*
 !.envs/.local/
+.envs/.local/.gmail
+!.envs/.local/.gmail.example
 
 
 # Misc
 *.bak
 #.swp
 
-exports/
-*.csv
+exported/

@@ -1,147 +1,129 @@
 # Mind You Logs
 
-A Django-based logging and analytics system built with Cookiecutter Django, Docker, PostgreSQL, Redis, and Celery.
+A Django logging and analytics project with Docker, PostgreSQL, Redis, Celery, and Mailpit.
 
----
+## What Is Tracked In Git
 
-## 🚀 Features
+- Source code
+- Django app files
+- Exported CSV log files
+- README and project scripts
 
-- Django Admin Panel
-- PostgreSQL Database
-- Redis for caching & task queue
-- Celery worker for async tasks
-- Celery Beat for scheduled jobs
-- Dockerized environment
+## What Stays Local
 
----
+- `.envs/.local/.gmail`
+- Other machine-specific secrets
+- Virtual environments and build caches
 
-## 🛠 Tech Stack
-
-- Django
-- PostgreSQL
-- Redis
-- Celery
-- Docker & Docker Compose
-
----
-
-## ⚙️ Setup Instructions
+## Step-by-Step Setup
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/mindyou_logs.git
+git clone https://github.com/kierabiad/mindyou_logs.git
 cd mindyou_logs
+```
 
+### 2. Create the local Gmail secret file
 
-### 2. Setup environment variables
-cp .env.example .env
+Copy the example file and fill in real values on your machine only.
 
-### 3. Build and start containers
-Open Docker Container Desktop
-docker compose -f docker-compose.local.yml up --build  
+```bash
+copy .envs\.local\.gmail.example .envs\.local\.gmail
+```
 
-### Access the app
-App: http://localhost:8000
-Admin: http://localhost:8000/admin
+On macOS or Linux, use:
 
-### 4. Run migrations
+```bash
+cp .envs/.local/.gmail.example .envs/.local/.gmail
+```
+
+Edit `.envs/.local/.gmail` and set:
+
+```bash
+GMAIL_SENDER_EMAIL=your_real_gmail_address@gmail.com
+GMAIL_APP_PASSWORD=your_16_character_google_app_password
+```
+
+### 3. Start Docker services
+
+```bash
+docker compose -f docker-compose.local.yml up --build
+```
+
+This starts Django, PostgreSQL, Redis, Celery, and Mailpit.
+
+### 4. Run database migrations
+
+In a second terminal:
+
+```bash
 docker compose -f docker-compose.local.yml exec django python manage.py migrate
+```
 
-### 5. Create a superuser
+### 5. Create a Django superuser
+
+```bash
 docker compose -f docker-compose.local.yml exec django python manage.py createsuperuser
+```
 
-🔄 Running Services
-Django App
-PostgreSQL
-Redis
-Celery Worker
-Celery Beat
+### 6. Check service status
 
-### Check services status
+```bash
 docker compose -f docker-compose.local.yml ps
-
-[![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-
-## Settings
-
-Moved to [settings](https://cookiecutter-django.readthedocs.io/en/latest/1-getting-started/settings.html).
-
-## Basic Commands
-
-### Setting Up Your Users
-
-- To create a **normal user account**, just go to Sign Up and fill out the form. Once you submit it, you'll see a "Verify Your E-mail Address" page. Go to your console to see a simulated email verification message. Copy the link into your browser. Now the user's email should be verified and ready to go.
-
-- To create a **superuser account**, use this command:
-
-      uv run python manage.py createsuperuser
-
-For convenience, you can keep your normal user logged in on Chrome and your superuser logged in on Firefox (or similar), so that you can see how the site behaves for both kinds of users.
-
-### Type checks
-
-Running type checks with mypy:
-
-    uv run mypy mindyou_logs
-
-### Test coverage
-
-To run the tests, check your test coverage, and generate an HTML coverage report:
-
-    uv run coverage run -m pytest
-    uv run coverage html
-    uv run open htmlcov/index.html
-
-#### Running tests with pytest
-
-    uv run pytest
-
-### Live reloading and Sass CSS compilation
-
-Moved to [Live reloading and SASS compilation](https://cookiecutter-django.readthedocs.io/en/latest/2-local-development/developing-locally.html#using-webpack-or-gulp).
-
-### Celery
-
-This app comes with Celery.
-
-To run a celery worker:
-
-```bash
-cd mindyou_logs
-uv run celery -A config.celery_app worker -l info
 ```
 
-Please note: For Celery's import magic to work, it is important _where_ the celery commands are run. If you are in the same folder with _manage.py_, you should be right.
+## Open the App
 
-To run [periodic tasks](https://docs.celeryq.dev/en/stable/userguide/periodic-tasks.html), you'll need to start the celery beat scheduler service. You can start it as a standalone process:
+- App: http://localhost:8000
+- Admin: http://localhost:8000/admin
+- Mailpit: http://127.0.0.1:8025
+
+## Gmail SMTP Setup
+
+Use Gmail App Passwords only.
+
+1. Turn on 2-Step Verification on the Google account that will send mail.
+2. Create a Google App Password.
+3. Put the sender email and app password in `.envs/.local/.gmail`.
+4. Do not commit `.envs/.local/.gmail`.
+
+## Export Logs and Email Them
+
+To export the current database rows and send them through Gmail:
 
 ```bash
-cd mindyou_logs
-uv run celery -A config.celery_app beat
+docker compose -f docker-compose.local.yml exec django python export_consolidated_logs_and_send_gmail.py --send-email --rows-per-csv 32000 --db-chunk-size 2000
 ```
 
-or you can embed the beat service inside a worker with the `-B` option (not recommended for production use):
+Notes:
+- Acuity and Zoho logs are exported separately.
+- CSV chunks default to 32,000 rows.
+- The email body contains the summary.
+- The script will use your local `.envs/.local/.gmail` file automatically.
+
+If you only want to export files and not send email:
 
 ```bash
-cd mindyou_logs
-uv run celery -A config.celery_app worker -B -l info
+docker compose -f docker-compose.local.yml exec django python export_consolidated_logs_and_send_gmail.py --rows-per-csv 32000 --db-chunk-size 2000
 ```
 
-### Email Server
+## Service Notes
 
-In development, it is often nice to be able to see emails that are being sent from your application. For that reason local SMTP server [Mailpit](https://github.com/axllent/mailpit) with a web interface is available as docker container.
+- Django runs on port 8000
+- Mailpit runs on port 8025
+- PostgreSQL and Redis are started by Docker Compose
+- Celery workers are included in the local compose file
 
-Container mailpit will start automatically when you will run all docker containers.
-Please check [cookiecutter-django Docker documentation](https://cookiecutter-django.readthedocs.io/en/latest/2-local-development/developing-locally-docker.html) for more details how to start all containers.
+## Project Scripts
 
-With Mailpit running, to view messages that are sent by your application, open your browser and go to `http://127.0.0.1:8025`
+- `scripts/export_consolidated_logs_and_send_gmail.py` exports logs, zips them, and sends email
+- `export_consolidated_logs_and_send_gmail.py` is a root-level launcher for the same script
 
-## Deployment
+## Common Commands
 
-The following details how to deploy this application.
-
-### Docker
-
-See detailed [cookiecutter-django Docker documentation](https://cookiecutter-django.readthedocs.io/en/latest/3-deployment/deployment-with-docker.html).
+```bash
+docker compose -f docker-compose.local.yml ps
+docker compose -f docker-compose.local.yml logs -f django
+docker compose -f docker-compose.local.yml exec django python manage.py shell
+```
