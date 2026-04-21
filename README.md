@@ -1,6 +1,6 @@
 # Mind You Logs
 
-A Django logging and analytics project with Docker, PostgreSQL, Redis, Celery, and Mailpit.
+A Django logging and analytics project with Docker, PostgreSQL, Redis, Celery, and factory_boy test data generation.
 
 ## What Is Tracked In Git
 
@@ -26,16 +26,16 @@ cd mindyou_logs
 
 ### 2. Create the local Gmail secret file
 
-Copy the example file and fill in real values on your machine only.
+Create the local file and fill in real values on your machine only.
 
 ```bash
-copy .envs\.local\.gmail.example .envs\.local\.gmail
+copy NUL .envs\.local\.gmail
 ```
 
 On macOS or Linux, use:
 
 ```bash
-cp .envs/.local/.gmail.example .envs/.local/.gmail
+touch .envs/.local/.gmail
 ```
 
 Edit `.envs/.local/.gmail` and set:
@@ -51,7 +51,7 @@ GMAIL_APP_PASSWORD=your_16_character_google_app_password
 docker compose -f docker-compose.local.yml up --build
 ```
 
-This starts Django, PostgreSQL, Redis, Celery, and Mailpit.
+This starts Django, PostgreSQL, Redis, and Celery.
 
 ### 4. Run database migrations
 
@@ -77,7 +77,6 @@ docker compose -f docker-compose.local.yml ps
 
 - App: http://localhost:8000
 - Admin: http://localhost:8000/admin
-- Mailpit: http://127.0.0.1:8025
 
 ## Gmail SMTP Setup
 
@@ -96,6 +95,12 @@ To export the current database rows and send them through Gmail:
 docker compose -f docker-compose.local.yml exec django python export_consolidated_logs_and_send_gmail.py --send-email --rows-per-csv 32000 --db-chunk-size 2000
 ```
 
+Explicit Gmail SMTP command:
+
+```bash
+docker compose -f docker-compose.local.yml exec django python export_consolidated_logs_and_send_gmail.py --send-email --rows-per-csv 32000 --db-chunk-size 2000 --smtp-host smtp.gmail.com --smtp-port 587
+```
+
 Notes:
 - Acuity and Zoho logs are exported separately.
 - CSV chunks default to 32,000 rows.
@@ -108,10 +113,17 @@ If you only want to export files and not send email:
 docker compose -f docker-compose.local.yml exec django python export_consolidated_logs_and_send_gmail.py --rows-per-csv 32000 --db-chunk-size 2000
 ```
 
+## Populate Dummy Data (factory_boy + PostgreSQL)
+
+This project uses PostgreSQL as the database and uses factory_boy to generate dummy logs.
+
+```bash
+docker compose -f docker-compose.local.yml exec django python manage.py populate_logs --acuity-count 9000 --zoho-count 110000 --batch-size 1000
+```
+
 ## Service Notes
 
 - Django runs on port 8000
-- Mailpit runs on port 8025
 - PostgreSQL and Redis are started by Docker Compose
 - Celery workers are included in the local compose file
 

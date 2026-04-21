@@ -287,7 +287,6 @@ mindyou_logs/media/
 .env.*
 !.envs/.local/
 .envs/.local/.gmail
-!.envs/.local/.gmail.example
 
 
 # Misc

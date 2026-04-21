@@ -16,6 +16,7 @@ import argparse
 import csv
 import json
 import os
+import socket
 import smtplib
 import sys
 from collections import Counter
@@ -513,6 +514,11 @@ def send_email(
             "Gmail authentication failed. Use a Google App Password, not your regular "
             "account password. Enable 2-Step Verification on the sender account, then "
             "generate a 16-character app password and put it in .envs/.local/.gmail."
+        ) from error
+    except socket.gaierror as error:
+        raise RuntimeError(
+            "SMTP hostname resolution failed. Check internet/DNS connectivity from the "
+            "django container and verify --smtp-host (for Gmail use smtp.gmail.com)."
         ) from error
 
 
